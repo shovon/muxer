@@ -1,0 +1,8 @@
+github.com/TonPC64/gomon v0.0.0-20181114074937-855f40fd6697 h1:v7kWWBWiPTu5WnMb0J6D1dl1fu7Jlpq/K6kNYmW0DhQ=
+github.com/TonPC64/gomon v0.0.0-20181114074937-855f40fd6697/go.mod h1:Ciz4IpEdzRYSTZd/MZl5r/kSCX8onOoDvXlchAg5JZU=
+github.com/mattn/go-shellwords v1.0.3 h1:K/VxK7SZ+cvuPgFSLKi5QPI9Vr/ipOf4C1gN+ntueUk=
+github.com/mattn/go-shellwords v1.0.3/go.mod h1:3xCvwCdWdlDJUrvuMn7Wuy9eWs4pE8vqg+NOMyg4B2o=
+github.com/mattn/go-shellwords v1.0.6 h1:9Jok5pILi5S1MnDirGVTufYGtksUs/V2BWUP3ZkeUUI=
+github.com/mattn/go-shellwords v1.0.6/go.mod h1:3xCvwCdWdlDJUrvuMn7Wuy9eWs4pE8vqg+NOMyg4B2o=
+gopkg.in/urfave/cli.v1 v1.20.0 h1:NdAVW6RYxDif9DhDHaAortIu956m2c0v+09AZBPTbE0=
+gopkg.in/urfave/cli.v1 v1.20.0/go.mod h1:vuBzUtMdQeixQj8LVd+/98pzhxNGQoyuPBlsXHOQNO0=
