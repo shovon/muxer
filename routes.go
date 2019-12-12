@@ -186,7 +186,7 @@ func (r Routes) GetPartial(route string) PartialRouteResult {
 	}
 
 	return PartialRouteResult{
-		Retrieved: false,
+		Retrieved: true,
 		Value:     result.Value,
 		Remainder: "/" + strings.Join(result.Remainder, "/"),
 	}

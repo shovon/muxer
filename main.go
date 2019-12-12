@@ -20,23 +20,23 @@ func main() {
 	// fmt.Println(router.Get("/foo/bar/baz/something"))
 
 	muxer := NewMuxer()
-	muxer.AddGetHandler("/foo", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte("Hello, World!"))
-	}))
-	muxer.AddPostHandler("/foo", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte("Hello, Post!"))
-	}))
-	muxer.AddGetHandler("/foo/:bar", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		params := Params(r)
-		w.Write([]byte(params["bar"]))
-	}))
-	muxer.AddGetHandler("/foo/:bar/baz/:widgets", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		params := Params(r)
-		w.Write([]byte(params["bar"]))
-		w.Write([]byte("\n"))
-		w.Write([]byte(params["widgets"]))
-		w.Write([]byte("\n"))
-	}))
+	// muxer.AddGetHandler("/foo", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	// 	w.Write([]byte("Hello, World!"))
+	// }))
+	// muxer.AddPostHandler("/foo", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	// 	w.Write([]byte("Hello, Post!"))
+	// }))
+	// muxer.AddGetHandler("/foo/:bar", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	// 	params := Params(r)
+	// 	w.Write([]byte(params["bar"]))
+	// }))
+	// muxer.AddGetHandler("/foo/:bar/baz/:widgets", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	// 	params := Params(r)
+	// 	w.Write([]byte(params["bar"]))
+	// 	w.Write([]byte("\n"))
+	// 	w.Write([]byte(params["widgets"]))
+	// 	w.Write([]byte("\n"))
+	// }))
 	subMuxer := NewMuxer()
 	subMuxer.AddGetHandler("/foo/:something", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		params := Params(r)
