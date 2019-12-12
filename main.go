@@ -43,7 +43,11 @@ func main() {
 		w.Write([]byte(params["something"]))
 		w.Write([]byte("\n"))
 	}))
-	muxer.AddGetHandler("/bar", subMuxer)
+	muxer.AddGetHandler("/bar/*", subMuxer)
+	muxer.AddGetHandler("/foo", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(200)
+		w.Write([]byte("LOL\n"))
+	}))
 
 	fmt.Println("Hopefully server is liistening on 0.0.0.0:8080")
 	panic(http.ListenAndServe("0.0.0.0:8080", muxer))

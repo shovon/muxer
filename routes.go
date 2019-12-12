@@ -14,19 +14,19 @@ func (r routeNodeOrRouteNodeMap) IsChildOnly() bool {
 	return r.child != nil
 }
 
-func newChild(child RouteNode) routeNodeOrRouteNodeMap {
+func newChild(child RouteNode) *routeNodeOrRouteNodeMap {
 	newChild := child
-	return routeNodeOrRouteNodeMap{&newChild, nil}
+	return &routeNodeOrRouteNodeMap{&newChild, nil}
 }
 
-func newChildren(children map[string]*RouteNode) routeNodeOrRouteNodeMap {
+func newChildren(children map[string]*RouteNode) *routeNodeOrRouteNodeMap {
 	newChildren := children
-	return routeNodeOrRouteNodeMap{nil, &newChildren}
+	return &routeNodeOrRouteNodeMap{nil, &newChildren}
 }
 
 // RouteNode a single ruote node.
 type RouteNode struct {
-	childOrChildren routeNodeOrRouteNodeMap
+	childOrChildren *routeNodeOrRouteNodeMap
 	value           interface{}
 }
 
@@ -126,7 +126,6 @@ func (r *Routes) Add(route string, value interface{}) error {
 
 	components := strings.Split(route, "/")
 	first, remainder := components[0], components[1:]
-
 	node, ok := r.children[first]
 	if !ok {
 		r.children[first] = NewRouteNode(remainder, value)
