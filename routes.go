@@ -6,82 +6,82 @@ import (
 )
 
 type routeNodeOrRouteNodeMap struct {
-	child    *RouteNode
-	children *map[string]*RouteNode
+	child    *routeNode
+	children *map[string]*routeNode
 }
 
 func (r routeNodeOrRouteNodeMap) IsChildOnly() bool {
 	return r.child != nil
 }
 
-func newChild(child RouteNode) *routeNodeOrRouteNodeMap {
+func newChild(child routeNode) *routeNodeOrRouteNodeMap {
 	newChild := child
 	return &routeNodeOrRouteNodeMap{&newChild, nil}
 }
 
-func newChildren(children map[string]*RouteNode) *routeNodeOrRouteNodeMap {
+func newChildren(children map[string]*routeNode) *routeNodeOrRouteNodeMap {
 	newChildren := children
 	return &routeNodeOrRouteNodeMap{nil, &newChildren}
 }
 
-// RouteNode a single ruote node.
-type RouteNode struct {
+// routeNode a single ruote node.
+type routeNode struct {
 	childOrChildren *routeNodeOrRouteNodeMap
 	value           interface{}
 }
 
-func NewRouteNode(components []string, value interface{}) RouteNode {
-	var r RouteNode
+func newRouteNode(components []string, value interface{}) routeNode {
+	var r routeNode
 	r.value = newChild
-	r.childOrChildren = newChildren(make(map[string]*RouteNode))
+	r.childOrChildren = newChildren(make(map[string]*routeNode))
 
-	r.Add(components, value)
+	r.add(components, value)
 	return r
 }
 
-// Add adds a new sub rooute.
-func (r *RouteNode) Add(components []string, value interface{}) {
+// add adds a new sub rooute.
+func (r *routeNode) add(components []string, value interface{}) {
 	if len(components) <= 0 {
 		r.value = value
 	} else {
 		first, remainder := components[0], components[1:]
 		if first[0] == ':' {
 			if r.childOrChildren.IsChildOnly() {
-				r.childOrChildren.child.Add(remainder, value)
+				r.childOrChildren.child.add(remainder, value)
 			} else {
-				r.childOrChildren = newChild(NewRouteNode(remainder, value))
+				r.childOrChildren = newChild(newRouteNode(remainder, value))
 			}
 		} else {
 			if r.childOrChildren.IsChildOnly() {
-				r.childOrChildren = newChildren(make(map[string]*RouteNode))
-				node := NewRouteNode(remainder, value)
+				r.childOrChildren = newChildren(make(map[string]*routeNode))
+				node := newRouteNode(remainder, value)
 				(*r.childOrChildren.children)[first] = &node
 			} else {
 				node, ok := (*r.childOrChildren.children)[first]
 				if !ok {
-					node := NewRouteNode(remainder, value)
+					node := newRouteNode(remainder, value)
 					(*r.childOrChildren.children)[first] = &node
 				} else {
-					node.Add(remainder, value)
+					node.add(remainder, value)
 				}
 			}
 		}
 	}
 }
 
-func (r *RouteNode) Get(components []string) interface{} {
+func (r *routeNode) get(components []string) interface{} {
 	if len(components) <= 0 {
 		return r.value
 	}
 	first, remainder := components[0], components[1:]
 	if r.childOrChildren.IsChildOnly() {
-		return r.childOrChildren.child.Get(remainder)
+		return r.childOrChildren.child.get(remainder)
 	}
 	node, ok := (*r.childOrChildren.children)[first]
 	if !ok {
 		return nil
 	}
-	return node.Get(remainder)
+	return node.get(remainder)
 }
 
 type PartialRouteNodeResult struct {
@@ -90,7 +90,7 @@ type PartialRouteNodeResult struct {
 	Remainder []string
 }
 
-func (r *RouteNode) GetPartial(components []string) PartialRouteNodeResult {
+func (r *routeNode) getPartial(components []string) PartialRouteNodeResult {
 	if len(components) <= 0 {
 		return PartialRouteNodeResult{
 			Retrieved: true,
@@ -100,7 +100,7 @@ func (r *RouteNode) GetPartial(components []string) PartialRouteNodeResult {
 	}
 	first, remainder := components[0], components[1:]
 	if r.childOrChildren.IsChildOnly() {
-		return r.childOrChildren.child.GetPartial(remainder)
+		return r.childOrChildren.child.getPartial(remainder)
 	}
 	node, ok := (*r.childOrChildren.children)[first]
 	if !ok {
@@ -110,16 +110,16 @@ func (r *RouteNode) GetPartial(components []string) PartialRouteNodeResult {
 			Remainder: remainder,
 		}
 	}
-	return node.GetPartial(remainder)
+	return node.getPartial(remainder)
 }
 
-// Routes get the routes.
-type Routes struct {
-	children map[string]RouteNode
+// routes get the routes.
+type routes struct {
+	children map[string]routeNode
 }
 
-// Add adds a new route.
-func (r *Routes) Add(route string, value interface{}) error {
+// add adds a new route.
+func (r *routes) add(route string, value interface{}) error {
 	if len(route) <= 0 {
 		return errors.New("Route cannot be empty")
 	}
@@ -128,15 +128,15 @@ func (r *Routes) Add(route string, value interface{}) error {
 	first, remainder := components[0], components[1:]
 	node, ok := r.children[first]
 	if !ok {
-		r.children[first] = NewRouteNode(remainder, value)
+		r.children[first] = newRouteNode(remainder, value)
 	} else {
-		node.Add(remainder, value)
+		node.add(remainder, value)
 	}
 
 	return nil
 }
 
-func (r Routes) Get(route string) interface{} {
+func (r routes) get(route string) interface{} {
 	if len(route) <= 0 {
 		return nil
 	}
@@ -147,44 +147,44 @@ func (r Routes) Get(route string) interface{} {
 	if !ok {
 		return nil
 	}
-	return node.Get(remainder)
+	return node.get(remainder)
 }
 
-func NewRouter() Routes {
-	return Routes{make(map[string]RouteNode)}
+func newRouter() routes {
+	return routes{make(map[string]routeNode)}
 }
 
-type PartialRouteResult struct {
+type partialRouteResult struct {
 	Retrieved bool
 	Value     interface{}
 	Remainder string
 }
 
-func (r Routes) GetPartial(route string) PartialRouteResult {
+func (r routes) getPartial(route string) partialRouteResult {
 	if len(route) <= 0 {
-		return PartialRouteResult{}
+		return partialRouteResult{}
 	}
 	components := strings.Split(route, "/")
 	first, remainder := components[0], components[1:]
 	node, ok := r.children[first]
 	if !ok {
-		return PartialRouteResult{
+		return partialRouteResult{
 			Retrieved: false,
 			Value:     nil,
 			Remainder: route,
 		}
 	}
 
-	result := node.GetPartial(remainder)
+	result := node.getPartial(remainder)
 	if !result.Retrieved {
-		return PartialRouteResult{
+		return partialRouteResult{
 			Retrieved: false,
 			Value:     nil,
 			Remainder: "/" + strings.Join(result.Remainder, "/"),
 		}
 	}
 
-	return PartialRouteResult{
+	return partialRouteResult{
 		Retrieved: true,
 		Value:     result.Value,
 		Remainder: "/" + strings.Join(result.Remainder, "/"),

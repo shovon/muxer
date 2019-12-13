@@ -5,13 +5,13 @@ import (
 )
 
 func TestInsertAndGet(t *testing.T) {
-	router := NewRouter()
-	router.Add("/haha", 10)
-	router.Add("/hello", 20)
-	router.Add("/hello/foo", 40)
-	router.Add("/foo/:bar", 32)
+	router := newRouter()
+	router.add("/haha", 10)
+	router.add("/hello", 20)
+	router.add("/hello/foo", 40)
+	router.add("/foo/:bar", 32)
 
-	haha, ok := router.Get("/haha").(int)
+	haha, ok := router.get("/haha").(int)
 	if !ok {
 		t.Error("Not an integer")
 	}
@@ -19,7 +19,7 @@ func TestInsertAndGet(t *testing.T) {
 		t.Error("Expected haha to be 10")
 	}
 
-	hello, ok := router.Get("/hello").(int)
+	hello, ok := router.get("/hello").(int)
 	if !ok {
 		t.Error("Not an integer")
 	}
@@ -27,7 +27,7 @@ func TestInsertAndGet(t *testing.T) {
 		t.Error("Expected hello to be 20")
 	}
 
-	foo, ok := router.Get("/hello/foo").(int)
+	foo, ok := router.get("/hello/foo").(int)
 	if !ok {
 		t.Error("Not an integer")
 	}
@@ -35,7 +35,7 @@ func TestInsertAndGet(t *testing.T) {
 		t.Error("Expected haha to be 40")
 	}
 
-	bar, ok := router.Get("/foo/20").(int)
+	bar, ok := router.get("/foo/20").(int)
 	if !ok {
 		t.Error("Not an integer")
 	}
@@ -45,13 +45,13 @@ func TestInsertAndGet(t *testing.T) {
 }
 
 func TestPartialGet(t *testing.T) {
-	router := NewRouter()
-	router.Add("/haha", 10)
-	router.Add("/foobar/:something", 20)
+	router := newRouter()
+	router.add("/haha", 10)
+	router.add("/foobar/:something", 20)
 
-	var result PartialRouteResult
+	var result partialRouteResult
 
-	result = router.GetPartial("/haha")
+	result = router.getPartial("/haha")
 	haha, ok := result.Value.(int)
 	if !ok {
 		t.Error("Not an integer")
@@ -60,7 +60,7 @@ func TestPartialGet(t *testing.T) {
 		t.Error("Expected haha to be 10")
 	}
 
-	result = router.GetPartial("/haha/nothing")
+	result = router.getPartial("/haha/nothing")
 	nothing, ok := result.Value.(int)
 	if !ok {
 		t.Error("Not an integer")
@@ -69,7 +69,7 @@ func TestPartialGet(t *testing.T) {
 		t.Error("Expected haha to be 10")
 	}
 
-	result = router.GetPartial("/foobar/haha/lol")
+	result = router.getPartial("/foobar/haha/lol")
 	lol, ok := result.Value.(int)
 	if !ok {
 		t.Error("Not an integer")

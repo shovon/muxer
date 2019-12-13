@@ -14,18 +14,20 @@ const (
 	previousPathOffsetContextKey key = "muxer_previousPathOffsetContextKey"
 )
 
+// Muxer the main muxer library.
 type Muxer struct {
-	routes *Routes
+	routes *routes
 }
+
+// TODO: determine if the field `routes` should not be a pointer.
 
 // NewMuxer creates a new muxer instance.
 func NewMuxer() *Muxer {
-	routes := NewRouter()
+	routes := newRouter()
 	return &Muxer{&routes}
 }
 
-// TODO: have this be a method of the Muxer struct.
-func wrapHandler(path string, h http.Handler) http.Handler {
+func (m *Muxer) wrapHandler(path string, h http.Handler) http.Handler {
 	// This function will also be filtering out all requests that are not
 	// wildcards.
 
@@ -78,6 +80,7 @@ func wrapHandler(path string, h http.Handler) http.Handler {
 	})
 }
 
+// Params grabs the parameters from the URL.
 func Params(r *http.Request) map[string]string {
 	previousPathOffset, ok :=
 		r.Context().Value(previousPathOffsetContextKey).(int)
@@ -123,38 +126,65 @@ func (m *Muxer) addHandlerMethod(path string, method string, h http.Handler) {
 
 	nonWildcardPath := extractRelevantPath(path)
 
-	handler, ok := m.routes.Get(nonWildcardPath).(*RouteHandler)
-	h = wrapHandler(path, h)
+	handler, ok := m.routes.get(nonWildcardPath).(*RouteHandler)
+	h = m.wrapHandler(path, h)
 	if handler == nil || !ok {
-		m.routes.Add(nonWildcardPath, &RouteHandler{method: h})
+		m.routes.add(nonWildcardPath, &RouteHandler{method: h})
 	} else {
 		(*handler)[method] = h
 	}
 }
 
-func (m *Muxer) AddGetHandler(path string, h http.Handler) {
-	m.addHandlerMethod(path, "GET", h)
+func (m *Muxer) addCatchAllHandler(path string, h http.Handler) {
+	nonWildcardPath := extractRelevantPath(path)
+
+	m.routes.add(nonWildcardPath, m.wrapHandler(path, h))
 }
 
+// AddGetHandler adds an http.Handler associated with a GET request to the
+// specified route.
+func (m *Muxer) AddGetHandler(route string, h http.Handler) {
+	m.addHandlerMethod(route, "GET", h)
+}
+
+// AddGetHandlerFunc adds a GET http.HandlerFunc associated with a GET request
+// to the specified route.
+func (m *Muxer) AddGetHandlerFunc(path string, h http.HandlerFunc) {
+	m.addHandlerMethod(path, "GET", http.HandlerFunc(h))
+}
+
+// AddPostHandler adds an http.Handler associated with a POST request to the
+// specified route.
 func (m *Muxer) AddPostHandler(path string, h http.Handler) {
 	m.addHandlerMethod(path, "POST", h)
 }
 
+// AddPutHandler adds an http.Handler associated with a PUT request to the
+// specified route.
 func (m *Muxer) AddPutHandler(path string, h http.Handler) {
 	m.addHandlerMethod(path, "PUT", h)
 }
 
+// AddDeleteHandler adds an http.Handler associated with a DELETE request to the
+// specified route.
 func (m *Muxer) AddDeleteHandler(path string, h http.Handler) {
 	m.addHandlerMethod(path, "DELETE", h)
 }
 
+// AddHandler adds a handler associated with any HTTP method request to the
+// specified route.
+func (m *Muxer) AddHandler(path string, h http.Handler) {
+	m.addCatchAllHandler(path, h)
+}
+
 // This is the entry-point for the entire muxer's HTTP request.
 func (m *Muxer) ServeHTTP(w http.ResponseWriter, req *http.Request) {
-
 	// We want to strip the prefix. But under what logic?
 	//
 	// No matter how nested this instance is, we will typically get the full URL
 	// path.
+	//
+	// And so, grab this variable to strip out the prefix.
 	offset, ok := req.Context().Value(pathOffsetContextKey).(int)
 	if !ok {
 		offset = 0
@@ -164,7 +194,7 @@ func (m *Muxer) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	pathComponents := strings.Split(req.URL.Path[1:], "/")[offset:]
 	partialPath := "/" + strings.Join(pathComponents, "/")
 
-	result := m.routes.GetPartial(partialPath)
+	result := m.routes.getPartial(partialPath)
 
 	if !result.Retrieved {
 		w.WriteHeader(404)
@@ -172,7 +202,7 @@ func (m *Muxer) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	handler, ok := result.Value.(*RouteHandler)
+	handler, ok := result.Value.(http.Handler)
 	if handler == nil || !ok {
 		w.WriteHeader(404)
 		w.Write([]byte("Not found"))
