@@ -284,10 +284,16 @@ func (m *Muxer) AddCustomMethodHandlerFunc(
 	m.AddCustomMethodHandler(route, method, http.HandlerFunc(h))
 }
 
-// AddHandler adds a handler associated with any HTTP method request to the
+// AddHandler adds a http.Handler associated with any HTTP method request to the
 // specified route.
 func (m *Muxer) AddHandler(path string, h http.Handler) {
 	m.addCatchAllHandler(path, h)
+}
+
+// AddHandlerFunc adds a http.HandlerFunc associated with any HTTP method
+// request to the specified route.
+func (m *Muxer) AddHandlerFunc(path string, h http.HandlerFunc) {
+	m.AddHandler(path, http.HandlerFunc(h))
 }
 
 // SetNotFoundHandler sets the not found handler.
