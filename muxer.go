@@ -258,14 +258,20 @@ func (m *Muxer) AddDeleteHandler(route string, h http.Handler) {
 
 // AddDeleteHandlerFunc adds an http.HandlerFunc associated with a DELETE
 // request to the specified route.
-func (m *Muxer) AddDeleteHandlerFunc(route string, h http.Handler) {
-	m.AddDeleteHandler(route, h)
+func (m *Muxer) AddDeleteHandlerFunc(route string, h http.HandlerFunc) {
+	m.AddDeleteHandler(route, http.HandlerFunc(h))
 }
 
 // AddPatchHandler adds an http.Handler associated with a PATCH request to the
 // specified route.
 func (m *Muxer) AddPatchHandler(route string, h http.Handler) {
 	m.addHandlerMethod(route, "PATCH", h)
+}
+
+// AddPatchHandlerFunc adds an http.Handler associated with a PATCH request to
+// the specified route.
+func (m *Muxer) AddPatchHandlerFunc(route string, h http.HandlerFunc) {
+	m.AddPatchHandler(route, http.HandlerFunc(h))
 }
 
 // AddCustomMethodHandler adds an http.Handler associated with a custom method

@@ -5,7 +5,8 @@ import (
 	"strings"
 )
 
-// All of this
+// All of this is the code associated with the tree data structure that holds
+// routing information.
 
 type routeNodeOrRouteNodeMap struct {
 	child    *routeNode
