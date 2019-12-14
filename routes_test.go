@@ -51,8 +51,8 @@ func TestPartialGet(t *testing.T) {
 
 	var result partialRouteResult
 
-	result = router.getPartial("/haha")
-	haha, ok := result.Value.(int)
+	result = router.getShortCircuited("/haha")
+	haha, ok := result.value.(int)
 	if !ok {
 		t.Error("Not an integer")
 	}
@@ -60,8 +60,8 @@ func TestPartialGet(t *testing.T) {
 		t.Error("Expected haha to be 10")
 	}
 
-	result = router.getPartial("/haha/nothing")
-	nothing, ok := result.Value.(int)
+	result = router.getShortCircuited("/haha/nothing")
+	nothing, ok := result.value.(int)
 	if !ok {
 		t.Error("Not an integer")
 	}
@@ -69,8 +69,8 @@ func TestPartialGet(t *testing.T) {
 		t.Error("Expected haha to be 10")
 	}
 
-	result = router.getPartial("/foobar/haha/lol")
-	lol, ok := result.Value.(int)
+	result = router.getShortCircuited("/foobar/haha/lol")
+	lol, ok := result.value.(int)
 	if !ok {
 		t.Error("Not an integer")
 	}

@@ -5,6 +5,8 @@ import (
 	"strings"
 )
 
+// All of this
+
 type routeNodeOrRouteNodeMap struct {
 	child    *routeNode
 	children *map[string]*routeNode
@@ -24,7 +26,7 @@ func newChildren(children map[string]*routeNode) *routeNodeOrRouteNodeMap {
 	return &routeNodeOrRouteNodeMap{nil, &newChildren}
 }
 
-// routeNode a single ruote node.
+// A children of nodes, or just a single node.
 type routeNode struct {
 	childOrChildren *routeNodeOrRouteNodeMap
 	value           interface{}
@@ -155,12 +157,14 @@ func newRouter() routes {
 }
 
 type partialRouteResult struct {
-	Retrieved bool
-	Value     interface{}
-	Remainder string
+	retrieved bool
+	value     interface{}
+	remainder string
 }
 
-func (r routes) getPartial(route string) partialRouteResult {
+// Let's say we only have a handler registered at /foo/bar, but we request a
+// handler at /foo/bar/baz, then we will still get the handler at /foo/bar.
+func (r routes) getShortCircuited(route string) partialRouteResult {
 	if len(route) <= 0 {
 		return partialRouteResult{}
 	}
@@ -169,24 +173,24 @@ func (r routes) getPartial(route string) partialRouteResult {
 	node, ok := r.children[first]
 	if !ok {
 		return partialRouteResult{
-			Retrieved: false,
-			Value:     nil,
-			Remainder: route,
+			retrieved: false,
+			value:     nil,
+			remainder: route,
 		}
 	}
 
 	result := node.getPartial(remainder)
 	if !result.Retrieved {
 		return partialRouteResult{
-			Retrieved: false,
-			Value:     nil,
-			Remainder: "/" + strings.Join(result.Remainder, "/"),
+			retrieved: false,
+			value:     nil,
+			remainder: "/" + strings.Join(result.Remainder, "/"),
 		}
 	}
 
 	return partialRouteResult{
-		Retrieved: true,
-		Value:     result.Value,
-		Remainder: "/" + strings.Join(result.Remainder, "/"),
+		retrieved: true,
+		value:     result.Value,
+		remainder: "/" + strings.Join(result.Remainder, "/"),
 	}
 }
