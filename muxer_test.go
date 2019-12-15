@@ -437,3 +437,101 @@ func TestSubMuxerAndWildcard(t *testing.T) {
 		t.Errorf("handler returned unexpected: want %v, but got %v", expected, body)
 	}
 }
+
+func TestMuxerWithRouterParam(t *testing.T) {
+	expected := "haha"
+	muxer := NewMuxer()
+
+	muxer.AddGetHandlerFunc(
+		"/foo/:value",
+		func(w http.ResponseWriter, r *http.Request) {
+			w.Write([]byte(Params(r)["value"]))
+		},
+	)
+
+	req, err := http.NewRequest("GET", "/foo/"+expected, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	rr := httptest.NewRecorder()
+	muxer.ServeHTTP(rr, req)
+
+	if status := rr.Result().StatusCode; status != http.StatusOK {
+		t.Errorf(
+			"Status code is not what is expected: want %d, but got %d",
+			http.StatusOK,
+			status,
+		)
+	}
+}
+
+func TestSubMuxerWithRouterParam(t *testing.T) {
+	expected := "haha"
+
+	muxer := NewMuxer()
+	subMuxer := NewMuxer()
+
+	subMuxer.AddGetHandlerFunc(
+		"/:value",
+		func(w http.ResponseWriter, r *http.Request) {
+			w.Write([]byte(Params(r)["value"]))
+		},
+	)
+	muxer.AddHandler("/foo/*", subMuxer)
+
+	req, err := http.NewRequest("GET", "/foo/"+expected, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	rr := httptest.NewRecorder()
+	muxer.ServeHTTP(rr, req)
+
+	if status := rr.Result().StatusCode; status != http.StatusOK {
+		t.Errorf(
+			"Status code is not what is expected: want %d, but got %d",
+			http.StatusOK,
+			status,
+		)
+	}
+
+	if body := rr.Body.String(); body != expected {
+		t.Errorf("handler returned unexpected: want %v, but got %v", expected, body)
+	}
+}
+
+func TestSubMuxerWithRouterNestedRoute(t *testing.T) {
+	expected := "haha"
+
+	muxer := NewMuxer()
+	subMuxer := NewMuxer()
+
+	subMuxer.AddGetHandlerFunc(
+		"/haha/:value",
+		func(w http.ResponseWriter, r *http.Request) {
+			w.Write([]byte(Params(r)["value"]))
+		},
+	)
+	muxer.AddHandler("/foo/*", subMuxer)
+
+	req, err := http.NewRequest("GET", "/foo/haha/"+expected, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	rr := httptest.NewRecorder()
+	muxer.ServeHTTP(rr, req)
+
+	if status := rr.Result().StatusCode; status != http.StatusOK {
+		t.Errorf(
+			"Status code is not what is expected: want %d, but got %d",
+			http.StatusOK,
+			status,
+		)
+	}
+
+	if body := rr.Body.String(); body != expected {
+		t.Errorf("handler returned unexpected: want %v, but got %v", expected, body)
+	}
+}

@@ -46,6 +46,8 @@ func (ws wrapperServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 // Muxer the main muxer library.
 type Muxer struct {
+	// TODO: have a way so that we don't need to call a constructor function.
+
 	routes          *routes
 	notFoundHandler http.Handler
 	middlewares     *middlewareNode
@@ -58,9 +60,9 @@ func notFound(w http.ResponseWriter, r *http.Request) {
 }
 
 // NewMuxer creates a new muxer instance.
-func NewMuxer() *Muxer {
+func NewMuxer() Muxer {
 	routes := newRouter()
-	return &Muxer{
+	return Muxer{
 		&routes,
 		http.HandlerFunc(notFound),
 		nil,
@@ -245,7 +247,7 @@ func (m *Muxer) SetNotFoundHandler(h http.Handler) {
 }
 
 // ServeHTTP is the entry-point for the entire muxer's HTTP request.
-func (m *Muxer) ServeHTTP(w http.ResponseWriter, req *http.Request) {
+func (m Muxer) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	// We want to strip the prefix. But under what logic?
 	//
 	// No matter how nested this instance is, we will typically get the full URL
