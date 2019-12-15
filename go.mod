@@ -1,4 +1,4 @@
-module github.com/shovon/some-route-handler
+module github.com/shovon/muxer
 
 go 1.13
 
