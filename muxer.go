@@ -39,47 +39,7 @@ type wrapperServer struct {
 
 // Implementation of ServeHTTP that actually handles the multiplexing.
 func (ws wrapperServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	// We want to strip the prefix. But under what logic?
-	//
-	// No matter how nested this instance is, we will typically get the full URL
-	// path.
-	//
-	// And so, grab offset context variable, to strip out the prefix.
-	offset, ok := r.Context().Value(pathOffsetContextKey).(int)
-	if !ok {
-		offset = 0
-	}
 
-	// Extract the relevant part of the path.
-	pathComponents := strings.Split(r.URL.Path[1:], "/")[offset:]
-	partialPath := "/" + strings.Join(pathComponents, "/")
-
-	result := ws.muxer.routes.getShortCircuited(partialPath)
-
-	if !result.retrieved {
-		ws.muxer.notFoundHandler.ServeHTTP(w, r)
-		return
-	}
-
-	switch handler := result.value.(type) {
-	case *routeHandler:
-		if handler == nil {
-			ws.muxer.notFoundHandler.ServeHTTP(w, r)
-		} else {
-			h, ok := (*handler)[r.Method]
-			if !ok {
-				ws.muxer.ServeHTTP(w, r)
-			} else {
-				h.ServeHTTP(w, r)
-			}
-		}
-	case http.Handler:
-		if handler == nil {
-			ws.muxer.notFoundHandler.ServeHTTP(w, r)
-		} else {
-			handler.ServeHTTP(w, r)
-		}
-	}
 }
 
 // TODO: determine if the field `routes` should not be a pointer.
@@ -89,7 +49,6 @@ type Muxer struct {
 	routes          *routes
 	notFoundHandler http.Handler
 	middlewares     *middlewareNode
-	chain           http.Handler
 }
 
 // Just the handlerfunc used for the not found response.
@@ -104,7 +63,6 @@ func NewMuxer() *Muxer {
 	return &Muxer{
 		&routes,
 		http.HandlerFunc(notFound),
-		nil,
 		nil,
 	}
 }
@@ -191,27 +149,6 @@ func (m *Muxer) addCatchAllHandler(path string, h http.Handler) {
 	nonWildcardPath := extractRelevantPath(path)
 
 	m.routes.add(nonWildcardPath, m.wrapHandler(path, h))
-}
-
-// Use adds a middleware to the muxer.
-func (m *Muxer) Use(f middleware) {
-	// N.B. computational complexity of `Use` is linear.  Not quite sure on how
-	// to optimize this. Nevertheless, for small numbers of inputs, the
-	// performance impact should be minimal, and, this function almost always run
-	// at initialization.
-
-	m.middlewares = m.middlewares.insert(f)
-
-	m.chain = wrapperServer{m}
-
-	// This initial middleware is the last middleware, and it is what will be
-	// invoking the remainder of the middlewares.
-	n := m.middlewares
-
-	for n != nil {
-		m.chain = n.value(m.chain)
-		n = m.middlewares.next
-	}
 }
 
 // AddGetHandler adds an http.Handler associated with a GET request to the
@@ -309,8 +246,47 @@ func (m *Muxer) SetNotFoundHandler(h http.Handler) {
 
 // ServeHTTP is the entry-point for the entire muxer's HTTP request.
 func (m *Muxer) ServeHTTP(w http.ResponseWriter, req *http.Request) {
-	if m.chain == nil {
-		m.chain = wrapperServer{m}
+	// We want to strip the prefix. But under what logic?
+	//
+	// No matter how nested this instance is, we will typically get the full URL
+	// path.
+	//
+	// And so, grab offset context variable, to strip out the prefix.
+	offset, ok := req.Context().Value(pathOffsetContextKey).(int)
+	if !ok {
+		offset = 0
 	}
-	m.chain.ServeHTTP(w, req)
+
+	// Extract the relevant part of the path.
+	pathComponents := strings.Split(req.URL.Path[1:], "/")[offset:]
+	partialPath := "/" + strings.Join(pathComponents, "/")
+
+	result := m.routes.getShortCircuited(partialPath)
+
+	if !result.retrieved {
+		m.notFoundHandler.ServeHTTP(w, req)
+		return
+	}
+
+	switch handler := result.value.(type) {
+	case *routeHandler:
+		if handler == nil {
+			m.notFoundHandler.ServeHTTP(w, req)
+		} else {
+			h, ok := (*handler)[req.Method]
+			if !ok {
+				m.notFoundHandler.ServeHTTP(w, req)
+			} else {
+				h.ServeHTTP(w, req)
+			}
+		}
+	case http.Handler:
+		if handler == nil {
+			m.notFoundHandler.ServeHTTP(w, req)
+		} else {
+			handler.ServeHTTP(w, req)
+		}
+	default:
+		m.notFoundHandler.ServeHTTP(w, req)
+	}
 }

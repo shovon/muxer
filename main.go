@@ -7,12 +7,12 @@ import (
 
 func main() {
 	muxer := NewMuxer()
-	muxer.Use(func(handler http.Handler) http.Handler {
-		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			w.Header().Add("Hello", "World")
-			handler.ServeHTTP(w, r)
-		})
-	})
+	// muxer.Use(func(handler http.Handler) http.Handler {
+	// 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	// 		w.Header().Add("Hello", "World")
+	// 		handler.ServeHTTP(w, r)
+	// 	})
+	// })
 	muxer.AddGetHandler("/foo", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("Hello, World!"))
 	}))
