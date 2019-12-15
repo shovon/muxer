@@ -7,7 +7,18 @@ Package `muxer` is a minimal implementation of the `http.Handler` interface, and
 ```go
 import "github.com/shovon/muxer"
 
+func hello(w http.ResponseWriter, r *http.Request) {
+	value := muxer.Params(r)["name"]
+	w.Write([]byte(value))
+}
+
 func main() {
-  muxer := NewMuxer()
+	mux := muxer.NewMuxer()
+
+	mux.AddGetHandlerFunc("/hello/:name", hello)
+
+	endpoint := "0.0.0.0:8080"
+	fmt.Println("Server listening on " + endpoint)
+	panic(http.ListenAndServe(endpoint, mux))
 }
 ```
